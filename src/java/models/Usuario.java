@@ -1,13 +1,16 @@
 package models;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Table(name="usuarios")
@@ -27,6 +30,8 @@ public class Usuario implements Serializable {
     private String email;
     private String password;
     private boolean esAdmin;
+    @OneToMany(mappedBy="owner", cascade = CascadeType.PERSIST)
+    private List<Producto> productos;
 
     public Usuario() {
     }
@@ -102,5 +107,14 @@ public class Usuario implements Serializable {
     public void setEsAdmin(boolean esAdmin) {
         this.esAdmin = esAdmin;
     }
+
+    public List<Producto> getProductos() {
+        return productos;
+    }
+
+    public void setProductos(List<Producto> productos) {
+        this.productos = productos;
+    }
+    
     
 }

@@ -22,7 +22,7 @@
             <label for="password">Contraseña:</label>
             <input type="password" id="password" name="password" required>
 
-            <button type="submit">Login</button>
+            <button class="" type="submit">Login</button>
         </form>
 
         <p>No tienes cuenta. <a href="/PortalVentas/register">Crea una</a><p>

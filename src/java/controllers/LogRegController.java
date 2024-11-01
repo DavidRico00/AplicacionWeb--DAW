@@ -80,7 +80,7 @@ public class LogRegController extends HttpServlet {
                         long loginID = validarLogin(email, pw);
 
                         if (loginID != -1) {
-                            response.sendRedirect(direccion + "/inicio?id=" + loginID);
+                            response.sendRedirect(direccion + "/inicio");
                         } else {
                             request.setAttribute("msg", "Error: email o contraseña erroneos");
                             vista = "login";

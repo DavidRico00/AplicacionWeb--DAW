@@ -26,5 +26,8 @@
 
             <button type="submit">Register</button>
         </form>
+        
+        <p>Ir a <a href="/PortalVentas/login">login</a></p>
+        
     </body>
 </html>
