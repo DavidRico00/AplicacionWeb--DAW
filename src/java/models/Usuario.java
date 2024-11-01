@@ -25,13 +25,13 @@ public class Usuario implements Serializable {
     
     private String name;
     private String email;
-    private byte[] password;
+    private String password;
     private boolean esAdmin;
 
     public Usuario() {
     }
 
-    public Usuario(String name, String email, byte[] password, boolean esAdmin) {
+    public Usuario(String name, String email, String password, boolean esAdmin) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -87,11 +87,11 @@ public class Usuario implements Serializable {
         this.email = email;
     }
 
-    public byte[] getPassword() {
+    public String getPassword() {
         return password;
     }
 
-    public void setPassword(byte[] password) {
+    public void setPassword(String password) {
         this.password = password;
     }
 
