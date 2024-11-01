@@ -7,11 +7,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.List;
 
 @Entity
+@Table(name="productos")
+@NamedQueries({
+    @NamedQuery(name="Producto.findAll", query="SELECT p FROM Producto p"),
+})
 public class Producto implements Serializable {
 
     private static final long serialVersionUID = 1L;

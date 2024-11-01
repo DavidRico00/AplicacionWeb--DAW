@@ -17,12 +17,9 @@ import jakarta.transaction.NotSupportedException;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.UserTransaction;
-import java.security.MessageDigest;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 
 import models.Usuario;
 

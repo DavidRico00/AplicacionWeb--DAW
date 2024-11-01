@@ -1,27 +1,21 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controllers;
 
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.UserTransaction;
+import java.util.List;
 import java.util.logging.Logger;
+import models.Producto;
 
-/**
- *
- * @author USER
- */
 @WebServlet(name = "PrincipalController", urlPatterns = {"/inicio"})
 public class PrincipalController extends HttpServlet {
 
@@ -31,7 +25,7 @@ public class PrincipalController extends HttpServlet {
     private UserTransaction utx;
     private static final Logger log = Logger.getLogger(controllers.LogRegController.class.getName());
 
-    private String redireccion = "http://localhost:8080";
+    private final String direccion = "http://localhost:8080/PortalVentas";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -40,6 +34,10 @@ public class PrincipalController extends HttpServlet {
 
         switch (servlet) {
             case "/inicio" -> {
+                TypedQuery<Producto> query = em.createNamedQuery("Producto.findAll", Producto.class);
+                List<Producto> lista = query.getResultList();
+                request.setAttribute("products", lista);
+                
                 vista = "principal";
             }
 
