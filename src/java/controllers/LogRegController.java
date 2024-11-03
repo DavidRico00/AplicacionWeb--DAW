@@ -11,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.HeuristicMixedException;
 import jakarta.transaction.HeuristicRollbackException;
 import jakarta.transaction.NotSupportedException;
@@ -37,11 +38,25 @@ public class LogRegController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String vista, servlet = request.getServletPath();
+        String vista = "", servlet = request.getServletPath(), info="";
+        
+        if(request.getPathInfo() != null)
+            info = request.getPathInfo();
+        
+        HttpSession session;
 
         switch (servlet) {
             case "/login" -> {
-                vista = "login";
+                if (info.equals("/logout")) {
+                    session = request.getSession();
+                    session.removeAttribute("id");
+                    session.invalidate();
+
+                    response.sendRedirect(direccion + "/inicio");
+                    
+                } else {
+                    vista = "login";
+                }
             }
 
             case "/register" -> {
@@ -53,8 +68,10 @@ public class LogRegController extends HttpServlet {
             }
         }
 
-        RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/" + vista + ".jsp");
-        rd.forward(request, response);
+        if (!vista.equals("")) {
+            RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/" + vista + ".jsp");
+            rd.forward(request, response);
+        }
     }
 
     @Override
@@ -62,6 +79,7 @@ public class LogRegController extends HttpServlet {
             throws ServletException, IOException {
         String vista = "";
         String servlet = request.getServletPath(), info = request.getPathInfo();
+        HttpSession session;
 
         switch (servlet) {
             case "/login" -> {
@@ -74,9 +92,11 @@ public class LogRegController extends HttpServlet {
                             throw new NullPointerException();
                         }
 
-                        long loginID = validarLogin(email, pw);
+                        Usuario user = validarLogin(email, pw);
 
-                        if (loginID != -1) {
+                        if (user != null) {
+                            session = request.getSession();
+                            session.setAttribute("id", user.getId());
                             response.sendRedirect(direccion + "/inicio");
                         } else {
                             request.setAttribute("msg", "Error: email o contraseña erroneos");
@@ -87,6 +107,7 @@ public class LogRegController extends HttpServlet {
                         request.setAttribute("msg", "Error: " + e.getMessage());
                         vista = "error";
                     }
+
                 }
             }
 
@@ -110,7 +131,7 @@ public class LogRegController extends HttpServlet {
                         }
 
                     } catch (IOException | NullPointerException e) {
-                        request.setAttribute("msg", e.getMessage());
+                        request.setAttribute("msg", "Error: " + e.getMessage());
                         vista = "error";
                     }
                 }
@@ -133,7 +154,7 @@ public class LogRegController extends HttpServlet {
 
         try {
             utx.begin();
-            
+
             TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findByEmail", Usuario.class);
             query.setParameter("email", user.getEmail());
 
@@ -156,8 +177,8 @@ public class LogRegController extends HttpServlet {
         return bool;
     }
 
-    private long validarLogin(String email, String pass) {
-        long id = -1;
+    private Usuario validarLogin(String email, String pass) {
+        Usuario user = null;
 
         try {
             TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findByEmailAndPassword", Usuario.class);
@@ -166,7 +187,7 @@ public class LogRegController extends HttpServlet {
             List<Usuario> lista = query.getResultList();
 
             if (!lista.isEmpty()) {
-                id = lista.get(0).getId();
+                user = lista.get(0);
             } else {
                 log.log(Level.INFO, "Un usuario ha hecho login erroneamente");
             }
@@ -176,6 +197,6 @@ public class LogRegController extends HttpServlet {
             throw new RuntimeException(e);
         }
 
-        return id;
+        return user;
     }
 }

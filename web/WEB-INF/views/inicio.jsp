@@ -7,24 +7,17 @@
         <title>Inicio</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-        
-        <link href="/PortalVentas/css/principal.css" rel="stylesheet" type="text/css"/>
-        <script src="/PortalVentas/js/function.js" type="text/javascript"></script>
+
+        <link href="/PortalVentas/css/HeaderFooter.css" rel="stylesheet" type="text/css"/>
     </head>
 
     <body>
-        
-        <nav>
-            <ul>
-                <li><a>Inicio</a></li>
-                <li>Subir producto</li>
-                <li>Perfil</li>
-            </ul>
-        </nav>
-        
+
+        <jsp:include page="comun/header.jsp" />
+
         <div>
             <c:if test="${empty requestScope.products}">
-                <p clase="" onclick="marcar(this)"> No hay ningun producto subido!! </p>
+                <p clase="" onclick="marcar(this)"> No hay ningun producto subido!! </p> 
             </c:if>
         </div>
 
@@ -41,5 +34,6 @@
             </c:if>
         </div>
 
+        <jsp:include page="comun/footer.jsp" />
     </body>
 </html>

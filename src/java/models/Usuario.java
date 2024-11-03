@@ -29,7 +29,6 @@ public class Usuario implements Serializable {
     private String name;
     private String email;
     private String password;
-    private boolean esAdmin;
     @OneToMany(mappedBy="owner", cascade = CascadeType.PERSIST)
     private List<Producto> productos;
 
@@ -40,7 +39,6 @@ public class Usuario implements Serializable {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.esAdmin = esAdmin;
     }    
 
     @Override
@@ -98,14 +96,6 @@ public class Usuario implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public boolean isEsAdmin() {
-        return esAdmin;
-    }
-
-    public void setEsAdmin(boolean esAdmin) {
-        this.esAdmin = esAdmin;
     }
 
     public List<Producto> getProductos() {

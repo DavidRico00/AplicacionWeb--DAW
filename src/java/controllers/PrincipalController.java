@@ -11,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.UserTransaction;
 import java.util.List;
 import java.util.logging.Logger;
@@ -30,7 +31,8 @@ public class PrincipalController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String vista, servlet = request.getServletPath();
+        String vista = "", servlet = request.getServletPath();
+        HttpSession session;
 
         switch (servlet) {
             case "/inicio" -> {
@@ -38,7 +40,11 @@ public class PrincipalController extends HttpServlet {
                 List<Producto> lista = query.getResultList();
                 request.setAttribute("products", lista);
                 
-                vista = "principal";
+                session = request.getSession();
+                if(session.getAttribute("id") != null)
+                    request.setAttribute("id", session.getAttribute("id"));
+                
+                vista = "inicio";
             }
 
             default -> {
@@ -48,12 +54,13 @@ public class PrincipalController extends HttpServlet {
 
         RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/" + vista + ".jsp");
         rd.forward(request, response);
+
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
     }
 
     @Override
