@@ -27,11 +27,30 @@ public class Producto implements Serializable {
     private Long id;
 
     private String nombre;
-    private Double precio;
+    private String descripcion;
+    private String rutaImg;
     @ManyToOne(fetch = FetchType.LAZY)
     private Usuario owner;
     @OneToMany(mappedBy="product", cascade = CascadeType.PERSIST)
     private List<Comentario> comentarios;
+
+    public Producto() {
+    }
+    
+    public Producto(String nombre, String descripcion, String rutaImg, Usuario owner) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.rutaImg = rutaImg;
+        this.owner = owner;
+    }
+
+    public Producto(String nombre,String descripcion, String rutaImg, Usuario owner, List<Comentario> comentarios) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.rutaImg = rutaImg;
+        this.owner = owner;
+        this.comentarios = comentarios;
+    }  
 
     @Override
     public int hashCode() {
@@ -74,12 +93,20 @@ public class Producto implements Serializable {
         this.nombre = nombre;
     }
 
-    public Double getPrecio() {
-        return precio;
+    public String getDescripcion() {
+        return descripcion;
     }
 
-    public void setPrecio(Double precio) {
-        this.precio = precio;
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public String getRutaImg() {
+        return rutaImg;
+    }
+
+    public void setRutaImg(String rutaImg) {
+        this.rutaImg = rutaImg;
     }
 
     public Usuario getOwner() {

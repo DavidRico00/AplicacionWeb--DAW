@@ -18,6 +18,8 @@ import jakarta.transaction.NotSupportedException;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.UserTransaction;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -32,17 +34,18 @@ public class LogRegController extends HttpServlet {
     @Resource
     private UserTransaction utx;
     private static final Logger log = Logger.getLogger(controllers.LogRegController.class.getName());
-
-    private final String direccion = "http://localhost:8080/PortalVentas";
+    
+    private final String HOST = "localhost";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String vista = "", servlet = request.getServletPath(), info="";
-        
-        if(request.getPathInfo() != null)
+        String vista = "", servlet = request.getServletPath(), info = "";
+
+        if (request.getPathInfo() != null) {
             info = request.getPathInfo();
-        
+        }
+
         HttpSession session;
 
         switch (servlet) {
@@ -52,8 +55,8 @@ public class LogRegController extends HttpServlet {
                     session.removeAttribute("id");
                     session.invalidate();
 
-                    response.sendRedirect(direccion + "/inicio");
-                    
+                    response.sendRedirect("http://"+HOST+":8080/PortalVentas/inicio");
+
                 } else {
                     vista = "login";
                 }
@@ -97,7 +100,9 @@ public class LogRegController extends HttpServlet {
                         if (user != null) {
                             session = request.getSession();
                             session.setAttribute("id", user.getId());
-                            response.sendRedirect(direccion + "/inicio");
+
+                            response.sendRedirect("http://"+HOST+":8080/PortalVentas/inicio");
+
                         } else {
                             request.setAttribute("msg", "Error: email o contraseña erroneos");
                             vista = "login";
@@ -122,9 +127,9 @@ public class LogRegController extends HttpServlet {
                             throw new NullPointerException();
                         }
 
-                        Usuario user = new Usuario(name, email, pw, false);
+                        Usuario user = new Usuario(name, email, pw);
                         if (save(user)) {
-                            response.sendRedirect(direccion + "/login");
+                            response.sendRedirect("http://"+HOST+":8080/PortalVentas/login");
                         } else {
                             request.setAttribute("msg", "Warning: Ya existe un usuario con ese email");
                             vista = "register";
@@ -135,6 +140,10 @@ public class LogRegController extends HttpServlet {
                         vista = "error";
                     }
                 }
+            }
+            
+            default ->{
+                vista = "error";
             }
         }
 
@@ -198,5 +207,18 @@ public class LogRegController extends HttpServlet {
         }
 
         return user;
+    }
+
+    public String getServerIp(boolean todo) {
+        try {
+            InetAddress inetAddress = InetAddress.getLocalHost();
+            if (todo) {
+                return "https://" + inetAddress.getHostAddress() + ":8080/PortalVentas";
+            } else {
+                return inetAddress.getHostAddress();
+            }
+        } catch (UnknownHostException e) {
+            return "IP desconocida";
+        }
     }
 }

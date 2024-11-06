@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<html>
+<html lang="es">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Inicio</title>
@@ -15,23 +15,29 @@
 
         <jsp:include page="comun/header.jsp" />
 
-        <div>
+        <div class="text-center mt-4 mb-3">
             <c:if test="${empty requestScope.products}">
-                <p clase="" onclick="marcar(this)"> No hay ningun producto subido!! </p> 
+                <p class="text-muted">No hay ningún producto subido.</p> <!-- Estilo de texto más suave -->
             </c:if>
         </div>
 
-        <div>
-            <c:if test="${!empty requestScope.products}">
-                <c:forEach var="product" items="${requestScope.products}">    
-                    <div class="">
-                        <table>
-                            <td><img src="/PortalVentas/img/productos/${product.id}.jpg" alt="img-${product.id}"></td>
-                            <td>${product.name}</td>
-                        </table>
+        <div class="mb-4 mt-4">
+            <div class="container mt-1" >
+                <c:if test="${!empty requestScope.products}">
+                    <div class="row row-cols-1 row-cols-md-4 g-4">
+                        <c:forEach var="product" items="${requestScope.products}">    
+                            <div class="col"> 
+                                <div class="card h-100 shadow-sm">
+                                    <img src="${product.rutaImg}" class="card-img-top" alt="img-${product.id}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${product.nombre}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
                     </div>
-                </c:forEach>
-            </c:if>
+                </c:if>
+            </div>
         </div>
 
         <jsp:include page="comun/footer.jsp" />

@@ -24,20 +24,18 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/PortalVentas/nuevoproducto">Publicar Producto</a>
                 </li>
-                <li class="nav-item position-relative">
-                    <a class="nav-link">Perfil</a>
-                    <ul>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/PortalVentas/miperfil">Modificar perfil</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/PortalVentas/miperfil/productos">Ver mis productos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/PortalVentas/login/logout">Cerrar sesión</a>
-                        </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="perfilDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Perfil
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="perfilDropdown" style="padding: 10px;">
+                        <li><a class="dropdown-item" href="/PortalVentas/perfil" style="padding: 0px 5px;">Mi perfil</a></li>
+                        <li><a class="dropdown-item" href="/PortalVentas/perfil/productos" style="padding: 0px 5px;">Mis productos</a></li>
+                        <li><a class="dropdown-item" href="/PortalVentas/login/logout" style="padding: 0px 5px;">Cerrar sesión</a></li>
                     </ul>
                 </li>
+
             </c:if>
         </ul>
     </nav>
@@ -47,3 +45,5 @@
         <button class="btn btn-outline-primary" type="submit">Buscar</button>
     </form>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

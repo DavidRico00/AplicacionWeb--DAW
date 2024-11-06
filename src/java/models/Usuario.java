@@ -16,6 +16,7 @@ import java.util.List;
 @Table(name="usuarios")
 @NamedQueries({
     @NamedQuery(name="Usuario.findAll", query="SELECT u FROM Usuario u"),
+    @NamedQuery(name="Usuario.findById", query="SELECT u FROM Usuario u WHERE u.id = :id"),
     @NamedQuery(name="Usuario.findByEmail", query="SELECT u FROM Usuario u WHERE u.email = :email"),
     @NamedQuery(name="Usuario.findByEmailAndPassword", query="SELECT u FROM Usuario u WHERE u.email = :email and u.password = :password"),
 })
@@ -35,11 +36,18 @@ public class Usuario implements Serializable {
     public Usuario() {
     }
 
-    public Usuario(String name, String email, String password, boolean esAdmin) {
+    public Usuario(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
     }    
+
+    public Usuario(String name, String email, String password, List<Producto> productos) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.productos = productos;
+    }
 
     @Override
     public int hashCode() {
@@ -106,5 +114,8 @@ public class Usuario implements Serializable {
         this.productos = productos;
     }
     
+    public int getSizeOfProductos(){
+        return productos.size();
+    }
     
 }

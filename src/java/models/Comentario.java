@@ -27,6 +27,18 @@ public class Comentario implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     private Producto product;
 
+    public Comentario() {
+    }
+
+    public Comentario(String text) {
+        this.text = text;
+    }
+
+    public Comentario(String text, Producto product) {
+        this.text = text;
+        this.product = product;
+    }
+    
     @Override
     public int hashCode() {
         int hash = 0;
