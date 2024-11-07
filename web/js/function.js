@@ -15,3 +15,6 @@ function previewImage(event) {
         preview.style.display = 'none';
     }
 }
+
+
+

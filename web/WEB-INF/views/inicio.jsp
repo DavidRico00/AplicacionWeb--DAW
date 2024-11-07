@@ -8,16 +8,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
 
-        <link href="/PortalVentas/css/HeaderFooter.css" rel="stylesheet" type="text/css"/>
+        <link href="css/HeaderFooter.css" rel="stylesheet" type="text/css"/>
     </head>
 
     <body>
-
         <jsp:include page="comun/header.jsp" />
 
         <div class="text-center mt-4 mb-3">
             <c:if test="${empty requestScope.products}">
-                <p class="text-muted">No hay ningún producto subido.</p> <!-- Estilo de texto más suave -->
+                <p class="text-muted">No hay ningún producto subido.</p>
             </c:if>
         </div>
 
@@ -28,7 +27,7 @@
                         <c:forEach var="product" items="${requestScope.products}">    
                             <div class="col"> 
                                 <div class="card h-100 shadow-sm">
-                                    <img src="${product.rutaImg}" class="card-img-top" alt="img-${product.id}">
+                                    <img src="${product.rutaImg}" class="card-img-top" alt="img-${product.nombre}">
                                     <div class="card-body">
                                         <h5 class="card-title">${product.nombre}</h5>
                                     </div>

@@ -66,8 +66,15 @@ public class PrincipalController extends HttpServlet {
                 if (session.getAttribute("id") != null) {
                     request.setAttribute("id", session.getAttribute("id"));
                 }
-
                 vista = "nuevoproducto";
+            }
+            
+            case "/perfil" -> {
+                session = request.getSession();
+                if (session.getAttribute("id") != null) {
+                    request.setAttribute("id", session.getAttribute("id"));
+                }
+                vista = "perfil";
             }
 
             default -> {
@@ -94,7 +101,7 @@ public class PrincipalController extends HttpServlet {
                     String titulo = request.getParameter("titulo");
                     String descripcion = request.getParameter("descripcion");
                     Part imgPart = request.getPart("imagen");
-                    String rutaImg = "";
+                    String rutaImg;
 
                     if (titulo.isEmpty() || descripcion.isEmpty() || imgPart == null) {
                         throw new NullPointerException();
@@ -110,22 +117,40 @@ public class PrincipalController extends HttpServlet {
                     int numProds = user.getSizeOfProductos();
                     numProds++;
 
-                    String relativePathFolder = "" + File.separator + "img" + File.separator + "productos/";
-                    
-                    rutaImg = relativePathFolder + getFileName(imgPart) + numProds + ".jpg";
+                    rutaImg = "img" + File.separator + "productos" + File.separator + getFileName(imgPart) + "_" + user.getId() + "_" + numProds + ".jpg";
+
                     Producto prod = new Producto(titulo, descripcion, rutaImg, user);
-                    
+
                     try {
                         utx.begin();
                         em.persist(prod);
+
+                        String relativePathFolder = "" + File.separator + "img" + File.separator + "productos";
+                        String absolutePathFolder = getServletContext().getRealPath(relativePathFolder);
+                        File f = new File(absolutePathFolder + File.separator + getFileName(imgPart) + "_" + user.getId() + "_" + numProds + ".jpg");
+                        OutputStream fos = new FileOutputStream(f);
+                        InputStream filecontent = imgPart.getInputStream();
+                        int read = 0;
+                        final byte[] bytes = new byte[1024];
+                        while ((read = filecontent.read(bytes)) != -1) {
+                            fos.write(bytes, 0, read);
+                        }
+
+                        fos.close();
+                        filecontent.close();
+
                         utx.commit();
 
-                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+                    } catch (HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException | IOException | IllegalStateException | SecurityException ex) {
                         Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
+                        request.setAttribute("msg", "Error antes rollback: " + ex.getMessage());
+                        vista = "error";
                         try {
                             utx.rollback();
                         } catch (IllegalStateException | SecurityException | SystemException ex1) {
                             Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
+                            request.setAttribute("msg", "Error despues del rollback: " + ex.getMessage());
+                            vista = "error";
                         }
                     }
 
@@ -162,7 +187,7 @@ public class PrincipalController extends HttpServlet {
         if (fileName != null && fileName.contains(".")) {
             fileName = fileName.substring(0, fileName.lastIndexOf('.'));
         }
-        
+
         return fileName;
     }
 }
