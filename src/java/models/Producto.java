@@ -18,6 +18,7 @@ import java.util.List;
 @Table(name="productos")
 @NamedQueries({
     @NamedQuery(name="Producto.findAll", query="SELECT p FROM Producto p"),
+    @NamedQuery(name="Producto.findByWord", query="SELECT p FROM Producto p WHERE p.nombre LIKE :palabra"),
 })
 public class Producto implements Serializable {
 

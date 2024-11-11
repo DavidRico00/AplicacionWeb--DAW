@@ -1,4 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <!DOCTYPE html>
 <html>
@@ -15,7 +16,31 @@
     <body>
         <jsp:include page="comun/header.jsp"/>
 
-        
+        <c:if test="${!empty requestScope.msg}">
+            <div class="alert alert-success text-center" role="alert">
+                ${requestScope.msg}
+            </div>
+        </c:if>
+
+        <div class="container mt-4 mb-4">
+            <h2>Perfil de Usuario</h2>
+
+            <form action="/PortalVentas/perfil/save" method="POST" id="perfilForm">
+
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="${user.name}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="email" name="email" value="${user.email}" readonly>
+                </div>
+
+                <button type="button" class="btn btn-secondary" id="btnModificar">Modificar</button>
+                <button type="submit" class="btn btn-primary ms-3" id="btnGuardar" disabled>Guardar</button>
+            </form>
+        </div>
 
         <jsp:include page="comun/footer.jsp" />
     </body>

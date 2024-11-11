@@ -23,15 +23,17 @@
         <div class="mb-4 mt-4">
             <div class="container mt-1" >
                 <c:if test="${!empty requestScope.products}">
-                    <div class="row row-cols-1 row-cols-md-4 g-4">
-                        <c:forEach var="product" items="${requestScope.products}">    
+                    <div class="row row-cols-1 row-cols-md-5 g-4">
+                        <c:forEach var="product" items="${requestScope.products}">   
                             <div class="col"> 
-                                <div class="card h-100 shadow-sm">
-                                    <img src="${product.rutaImg}" class="card-img-top" alt="img-${product.nombre}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">${product.nombre}</h5>
+                                <a href="/PortalVentas/producto?id=${product.id}" style="text-decoration: none; color: inherit;">
+                                    <div class="card h-100 shadow-sm">
+                                        <img src="${product.rutaImg}" class="card-img-top" alt="img-${product.nombre}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${product.nombre}</h5>
+                                        </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                         </c:forEach>
                     </div>

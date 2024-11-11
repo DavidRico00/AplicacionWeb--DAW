@@ -27,11 +27,12 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import models.Comentario;
 import models.Producto;
 import models.Usuario;
 
 @MultipartConfig
-@WebServlet(name = "PrincipalController", urlPatterns = {"/inicio", "/perfil/*", "/nuevoproducto/*"})
+@WebServlet(name = "PrincipalController", urlPatterns = {"/inicio", "/perfil/*", "/nuevoproducto/*", "/producto/*"})
 public class PrincipalController extends HttpServlet {
 
     @PersistenceContext(unitName = "PortalVentasPU")
@@ -40,17 +41,30 @@ public class PrincipalController extends HttpServlet {
     private UserTransaction utx;
     private static final Logger log = Logger.getLogger(controllers.LogRegController.class.getName());
 
+    private final String HOST = "localhost";
+    //private final String HOST = "192.168.1.161";
+
+    //response.sendRedirect("http://" + HOST + ":8080/PortalVentas/");
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String vista;
-        String servlet = request.getServletPath();
+        String servlet = request.getServletPath(), info = request.getPathInfo();
         HttpSession session;
 
         switch (servlet) {
             case "/inicio" -> {
-                TypedQuery<Producto> query = em.createNamedQuery("Producto.findAll", Producto.class);
-                List<Producto> lista = query.getResultList();
+                String palabra = request.getParameter("query");
+                List<Producto> lista;
+
+                if (palabra != null) {
+                    TypedQuery<Producto> query = em.createNamedQuery("Producto.findByWord", Producto.class);
+                    query.setParameter("palabra", "%" + palabra + "%");
+                    lista = query.getResultList();
+                } else {
+                    TypedQuery<Producto> query = em.createNamedQuery("Producto.findAll", Producto.class);
+                    lista = query.getResultList();
+                }
                 request.setAttribute("products", lista);
 
                 session = request.getSession();
@@ -65,16 +79,46 @@ public class PrincipalController extends HttpServlet {
                 session = request.getSession();
                 if (session.getAttribute("id") != null) {
                     request.setAttribute("id", session.getAttribute("id"));
+                    vista = "nuevoproducto";
+
+                } else {
+                    vista = "error";
                 }
-                vista = "nuevoproducto";
             }
-            
+
             case "/perfil" -> {
                 session = request.getSession();
+
                 if (session.getAttribute("id") != null) {
+                    TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findById", Usuario.class);
+                    query.setParameter("id", (long) session.getAttribute("id"));
+                    List<Usuario> lista = query.getResultList();
+
                     request.setAttribute("id", session.getAttribute("id"));
+                    request.setAttribute("user", lista.get(0));
+
+                    if (session.getAttribute("msg") != null) {
+                        request.setAttribute("msg", session.getAttribute("msg"));
+                        session.removeAttribute("msg");
+                    }
+
+                    vista = "perfil";
+
+                } else {
+                    vista = "error";
                 }
-                vista = "perfil";
+            }
+
+            case "/producto" -> {
+                long id = Long.parseLong(request.getParameter("id"));
+
+                Producto prod = em.find(Producto.class, id);
+
+                session = request.getSession();
+                request.setAttribute("id", session.getAttribute("id"));
+                request.setAttribute("producto", prod);
+
+                vista = "verproducto";
             }
 
             default -> {
@@ -82,8 +126,10 @@ public class PrincipalController extends HttpServlet {
             }
         }
 
-        RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/" + vista + ".jsp");
-        rd.forward(request, response);
+        if (!vista.equals("")) {
+            RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/" + vista + ".jsp");
+            rd.forward(request, response);
+        }
 
     }
 
@@ -93,7 +139,6 @@ public class PrincipalController extends HttpServlet {
         String vista = "";
         String servlet = request.getServletPath(), info = request.getPathInfo();
         HttpSession session;
-        final String HOST = "localhost";
 
         switch (servlet) {
             case "/nuevoproducto" -> {
@@ -155,6 +200,83 @@ public class PrincipalController extends HttpServlet {
                     }
 
                     response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                } else {
+                    vista = "error";
+                }
+            }
+
+            case "/perfil" -> {
+                if (info.equals("/save")) {
+                    String nombre = request.getParameter("nombre");
+                    String email = request.getParameter("email");
+
+                    if (nombre.isEmpty() || email.isEmpty()) {
+                        throw new NullPointerException();
+                    }
+
+                    session = request.getSession();
+                    long id = (long) session.getAttribute("id");
+                    Usuario user = em.find(Usuario.class, id);
+
+                    user.setName(nombre);
+                    user.setEmail(email);
+                    try {
+
+                        utx.begin();
+                        em.merge(user);
+                        utx.commit();
+
+                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+                        Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
+                        try {
+                            utx.rollback();
+                        } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
+                    }
+
+                    session.setAttribute("msg", "Usuario actualizado con exito");
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil");
+
+                } else {
+                    vista = "error";
+                }
+            }
+
+            case "/producto" -> {
+                if (info.equals("/addcomment")) {
+
+                    long idProd = Long.parseLong(request.getParameter("id"));
+                    String texto = request.getParameter("comentario");
+
+                    Producto prod = em.find(Producto.class, idProd);
+
+                    List<Comentario> comments = prod.getComentarios();
+                    Comentario comentario = new Comentario(texto, prod);
+                    comments.add(comentario);
+                    prod.setComentarios(comments);
+
+                    try {
+                        utx.begin();
+
+                        em.persist(comentario);
+                        em.merge(prod);
+
+                        utx.commit();
+
+                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+                        Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
+                        try {
+                            utx.rollback();
+                        } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
+                    }
+
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/producto?id=" + idProd);
+
+                } else {
+                    vista = "error";
                 }
             }
 

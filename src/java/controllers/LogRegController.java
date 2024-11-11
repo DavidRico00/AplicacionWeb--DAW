@@ -36,6 +36,7 @@ public class LogRegController extends HttpServlet {
     private static final Logger log = Logger.getLogger(controllers.LogRegController.class.getName());
     
     private final String HOST = "localhost";
+    //private final String HOST = "192.168.1.161";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

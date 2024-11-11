@@ -16,7 +16,7 @@
     <body>
         <jsp:include page="comun/header.jsp" />
 
-        <div class="container mt-5 mb-4">
+        <div class="container mt-5 mb-5">
             <h2>Publicar Producto</h2>
             <form action="/PortalVentas/nuevoproducto/save" method="POST" enctype="multipart/form-data">
 
@@ -33,10 +33,6 @@
                 <div class="mb-3">
                     <label for="imagen" class="form-label">Subir Imagen</label>
                     <input type="file" class="form-control" id="imagen" name="imagen" required onchange="previewImage(event)">
-                </div>
-
-                <div class="mb-3">
-                    <img id="preview" src="#" alt="Previsualización de la imagen" style="display: none; max-width: 100%; height: auto;">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Publicar</button>

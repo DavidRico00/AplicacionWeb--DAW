@@ -1,20 +1,27 @@
-function previewImage(event) {
-    const preview = document.getElementById('preview');
-    const file = event.target.files[0];
+document.addEventListener("DOMContentLoaded", function() {
+    const btnModificar = document.getElementById("btnModificar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const campos = ["nombre", "email", "telefono"];
 
-    if (file) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
+    // Función para activar el modo de edición
+    function habilitarEdicion() {
+        // Habilitar los campos de entrada para edición
+        campos.forEach(id => {
+            const campo = document.getElementById(id);
+            if (campo) {
+                campo.readOnly = false;
+            }
+        });
 
-        reader.readAsDataURL(file);
-    } else {
-        preview.style.display = 'none';
+        // Habilitar el botón "Guardar"
+        btnGuardar.disabled = false;
+        btnGuardar.classList.remove("btn-outline-primary"); // Quitar clase de desactivado si tiene
+        btnGuardar.classList.add("btn-primary"); // Cambiar color a activo
     }
-}
 
-
+    // Añadir el evento de clic al botón "Modificar" para activar el modo de edición
+    if (btnModificar) {
+        btnModificar.addEventListener("click", habilitarEdicion);
+    }
+});
 
