@@ -32,7 +32,7 @@
 
                 <div class="mb-3">
                     <label for="imagen" class="form-label">Subir Imagen</label>
-                    <input type="file" class="form-control" id="imagen" name="imagen" required onchange="previewImage(event)">
+                    <input type="file" class="form-control" id="imagen" name="imagen" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Publicar</button>

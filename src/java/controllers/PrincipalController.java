@@ -43,8 +43,7 @@ public class PrincipalController extends HttpServlet {
 
     private final String HOST = "localhost";
     //private final String HOST = "192.168.1.161";
-
-    //response.sendRedirect("http://" + HOST + ":8080/PortalVentas/");
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -88,25 +87,25 @@ public class PrincipalController extends HttpServlet {
 
             case "/perfil" -> {
                 session = request.getSession();
+                request.setAttribute("id", session.getAttribute("id"));
 
-                if (session.getAttribute("id") != null) {
-                    TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findById", Usuario.class);
-                    query.setParameter("id", (long) session.getAttribute("id"));
-                    List<Usuario> lista = query.getResultList();
+                Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
 
-                    request.setAttribute("id", session.getAttribute("id"));
-                    request.setAttribute("user", lista.get(0));
+                if (session.getAttribute("msg") != null) {
+                    request.setAttribute("msg", session.getAttribute("msg"));
+                    session.removeAttribute("msg");
+                }
 
-                    if (session.getAttribute("msg") != null) {
-                        request.setAttribute("msg", session.getAttribute("msg"));
-                        session.removeAttribute("msg");
-                    }
+                if (info!=null && info.equals("/productos")) {
+                    request.setAttribute("productos", user.getProductos());
 
-                    vista = "perfil";
+                    vista = "misproductos";
 
                 } else {
-                    vista = "error";
+                    request.setAttribute("user", user);
+                    vista = "perfil";
                 }
+
             }
 
             case "/producto" -> {
@@ -153,26 +152,28 @@ public class PrincipalController extends HttpServlet {
                     }
 
                     session = request.getSession();
-                    long id = (long) session.getAttribute("id");
 
-                    TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findById", Usuario.class);
-                    query.setParameter("id", id);
-                    Usuario user = query.getSingleResult();
+                    Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
 
                     int numProds = user.getSizeOfProductos();
                     numProds++;
 
-                    rutaImg = "img" + File.separator + "productos" + File.separator + getFileName(imgPart) + "_" + user.getId() + "_" + numProds + ".jpg";
+                    rutaImg = "img" + File.separator + "productos" + File.separator + user.getId() + "_" + numProds + ".jpg";
 
                     Producto prod = new Producto(titulo, descripcion, rutaImg, user);
 
                     try {
                         utx.begin();
                         em.persist(prod);
+                        
+                        List<Producto> prods = user.getProductos();
+                        prods.add(prod);
+                        
+                        em.merge(user);
 
                         String relativePathFolder = "" + File.separator + "img" + File.separator + "productos";
                         String absolutePathFolder = getServletContext().getRealPath(relativePathFolder);
-                        File f = new File(absolutePathFolder + File.separator + getFileName(imgPart) + "_" + user.getId() + "_" + numProds + ".jpg");
+                        File f = new File(absolutePathFolder + File.separator + user.getId() + "_" + numProds + ".jpg");
                         OutputStream fos = new FileOutputStream(f);
                         InputStream filecontent = imgPart.getInputStream();
                         int read = 0;

@@ -2,7 +2,7 @@
 
 <header>
     <div class="container-fluid d-flex align-items-center p-3 bg-light">
-        <img src="img/logo.png" alt="Logo de PortalVentas" width="50" height="50" class="me-3">
+        <img src="/PortalVentas/img/logo.png" alt="Logo de PortalVentas" width="50" height="50" class="me-3">
         <h1 class="me-auto">Portal Productos</h1>
     </div>
 </header>
