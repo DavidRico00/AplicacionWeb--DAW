@@ -3,26 +3,21 @@ package controllers;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.Part;
 import jakarta.transaction.HeuristicMixedException;
 import jakarta.transaction.HeuristicRollbackException;
 import jakarta.transaction.NotSupportedException;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.UserTransaction;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,9 +25,8 @@ import models.Comentario;
 import models.Producto;
 import models.Usuario;
 
-@MultipartConfig
-@WebServlet(name = "ProductoController", urlPatterns = {"/nuevoproducto/*", "/producto/*"})
-public class ProductoController extends HttpServlet {
+@WebServlet(name = "PerfilController", urlPatterns = {"/perfil/*"})
+public class PerfilController extends HttpServlet {
 
     @PersistenceContext(unitName = "PortalVentasPU")
     private EntityManager em;
@@ -52,29 +46,37 @@ public class ProductoController extends HttpServlet {
 
         switch (servlet) {
             
-            case "/producto" -> {
-                long id = Long.parseLong(request.getParameter("id"));
-
-                Producto prod = em.find(Producto.class, id);
-
+            case "/perfil" -> {
                 session = request.getSession();
                 request.setAttribute("id", session.getAttribute("id"));
-                request.setAttribute("producto", prod);
 
-                vista = "verproducto";
-            }
-            
-            case "/nuevoproducto" -> {
-                session = request.getSession();
-                if (session.getAttribute("id") != null) {
-                    request.setAttribute("id", session.getAttribute("id"));
-                    vista = "nuevoproducto";
+                Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
+
+                if (session.getAttribute("msg") != null) {
+                    request.setAttribute("msg", session.getAttribute("msg"));
+                    session.removeAttribute("msg");
+                }
+
+                if (info != null && info.equals("/productos")) {
+                    request.setAttribute("productos", user.getProductos());
+
+                    vista = "misproductos";
+
+                } else if (info != null && info.equals("/productos/modificar")) {
+
+                    long idProd = Long.parseLong(request.getParameter("idProd"));
+                    Producto prod = em.find(Producto.class, idProd);
+
+                    request.setAttribute("producto", prod);
+
+                    vista = "modificarproducto";
 
                 } else {
-                    vista = "error";
+                    request.setAttribute("user", user);
+                    vista = "perfil";
                 }
             }
-                
+
             default -> {
                 vista = "error";
             }
@@ -92,93 +94,67 @@ public class ProductoController extends HttpServlet {
         String vista = "";
         String servlet = request.getServletPath(), info = request.getPathInfo();
         HttpSession session;
-        
+
         switch (servlet) {
             
-            case "/nuevoproducto" -> {
+            case "/perfil" -> {
                 if (info.equals("/save")) {
-                    String titulo = request.getParameter("titulo");
-                    String descripcion = request.getParameter("descripcion");
-                    Part imgPart = request.getPart("imagen");
-                    String rutaImg;
+                    String nombre = request.getParameter("nombre");
+                    String email = request.getParameter("email");
 
-                    if (titulo.isEmpty() || descripcion.isEmpty() || imgPart == null) {
+                    if (nombre.isEmpty() || email.isEmpty()) {
                         throw new NullPointerException();
                     }
 
                     session = request.getSession();
+                    long id = (long) session.getAttribute("id");
+                    Usuario user = em.find(Usuario.class, id);
 
-                    Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
-
-                    int numProds = user.getSizeOfProductos();
-                    numProds++;
-
-                    rutaImg = "img" + File.separator + "productos" + File.separator + user.getId() + "_" + numProds + ".jpg";
-
-                    Producto prod = new Producto(titulo, descripcion, rutaImg, user);
-
+                    user.setName(nombre);
+                    user.setEmail(email);
                     try {
+
                         utx.begin();
-                        em.persist(prod);
-                        
-                        List<Producto> prods = user.getProductos();
-                        prods.add(prod);
-                        
                         em.merge(user);
-
-                        String relativePathFolder = "" + File.separator + "img" + File.separator + "productos";
-                        String absolutePathFolder = getServletContext().getRealPath(relativePathFolder);
-                        File f = new File(absolutePathFolder + File.separator + user.getId() + "_" + numProds + ".jpg");
-                        OutputStream fos = new FileOutputStream(f);
-                        InputStream filecontent = imgPart.getInputStream();
-                        int read = 0;
-                        final byte[] bytes = new byte[1024];
-                        while ((read = filecontent.read(bytes)) != -1) {
-                            fos.write(bytes, 0, read);
-                        }
-
-                        fos.close();
-                        filecontent.close();
-
                         utx.commit();
 
-                    } catch (HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException | IOException | IllegalStateException | SecurityException ex) {
+                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
                         Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
-                        request.setAttribute("msg", "Error antes rollback: " + ex.getMessage());
-                        vista = "error";
                         try {
                             utx.rollback();
                         } catch (IllegalStateException | SecurityException | SystemException ex1) {
                             Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
-                            request.setAttribute("msg", "Error despues del rollback: " + ex.getMessage());
-                            vista = "error";
                         }
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
-                } else {
-                    vista = "error";
-                }
-            }
-            
-            case "/producto" -> {
-                if (info.equals("/addcomment")) {
+                    session.setAttribute("msg", "Usuario actualizado con exito");
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil");
 
-                    long idProd = Long.parseLong(request.getParameter("id"));
-                    String texto = request.getParameter("comentario");
+                } else if (info.equals("/productos/delete")) {
 
+                    long idProd = Long.parseLong(request.getParameter("idProd"));
                     Producto prod = em.find(Producto.class, idProd);
 
-                    List<Comentario> comments = prod.getComentarios();
-                    Comentario comentario = new Comentario(texto, prod);
-                    comments.add(comentario);
-                    prod.setComentarios(comments);
+                    session = request.getSession();
+                    Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
+                    System.out.println("ProdID  " + prod.getId());
 
                     try {
                         utx.begin();
+                        if (!em.contains(prod)) {
+                            prod = em.merge(prod);
+                        }
 
-                        em.persist(comentario);
-                        em.merge(prod);
+                        TypedQuery<Comentario> query = em.createNamedQuery("Comentario.findAllByIdProd", Comentario.class);
+                        query.setParameter("idProd", prod);
+                        List<Comentario> listaCom = query.getResultList();
+                        for (Comentario com : listaCom) {
+                            em.remove(com);
+                        }
+
+                        em.remove(prod);
+                        user.getProductos().remove(prod);
+                        em.merge(user);
 
                         utx.commit();
 
@@ -191,13 +167,13 @@ public class ProductoController extends HttpServlet {
                         }
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/producto?id=" + idProd);
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil/productos");
 
                 } else {
                     vista = "error";
                 }
             }
-            
+
             default -> {
                 vista = "error";
             }
@@ -208,11 +184,6 @@ public class ProductoController extends HttpServlet {
             rd.forward(request, response);
         }
 
-    }
-
-    @Override
-    public String getServletInfo() {
-        return "Short description";
     }
 
 }

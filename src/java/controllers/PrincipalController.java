@@ -21,18 +21,17 @@ import jakarta.transaction.UserTransaction;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import models.Comentario;
 import models.Producto;
 import models.Usuario;
 
-@WebServlet(name = "PrincipalController", urlPatterns = {"/inicio", "/perfil/*"})
+@WebServlet(name = "PrincipalController", urlPatterns = {"/login/*", "/register/*", "/inicio", "/error"})
 public class PrincipalController extends HttpServlet {
 
     @PersistenceContext(unitName = "PortalVentasPU")
     private EntityManager em;
     @Resource
     private UserTransaction utx;
-    private static final Logger log = Logger.getLogger(controllers.LogRegController.class.getName());
+    private static final Logger log = Logger.getLogger(controllers.PrincipalController.class.getName());
 
     private final String HOST = "localhost";
     //private final String HOST = "192.168.1.161";
@@ -40,11 +39,28 @@ public class PrincipalController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String vista;
+        String vista = "";
         String servlet = request.getServletPath(), info = request.getPathInfo();
         HttpSession session;
 
         switch (servlet) {
+
+            case "/login" -> {
+                if (info!=null && info.equals("/logout")) {
+                    session = request.getSession();
+                    session.removeAttribute("id");
+                    session.invalidate();
+
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+
+                } else {
+                    vista = "login";
+                }
+            }
+
+            case "/register" -> {
+                vista = "register";
+            }
 
             case "/inicio" -> {
                 String palabra = request.getParameter("query");
@@ -68,29 +84,6 @@ public class PrincipalController extends HttpServlet {
                 vista = "inicio";
             }
 
-            case "/perfil" -> {
-                session = request.getSession();
-                request.setAttribute("id", session.getAttribute("id"));
-
-                Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
-
-                if (session.getAttribute("msg") != null) {
-                    request.setAttribute("msg", session.getAttribute("msg"));
-                    session.removeAttribute("msg");
-                }
-
-                if (info != null && info.equals("/productos")) {
-                    request.setAttribute("productos", user.getProductos());
-
-                    vista = "misproductos";
-
-                } else {
-                    request.setAttribute("user", user);
-                    vista = "perfil";
-                }
-
-            }
-
             default -> {
                 vista = "error";
             }
@@ -112,80 +105,60 @@ public class PrincipalController extends HttpServlet {
 
         switch (servlet) {
 
-            case "/perfil" -> {
-                if (info.equals("/save")) {
-                    String nombre = request.getParameter("nombre");
+            case "/login" -> {
+                if (info.equals("/check")) {
                     String email = request.getParameter("email");
-
-                    if (nombre.isEmpty() || email.isEmpty()) {
-                        throw new NullPointerException();
-                    }
-
-                    session = request.getSession();
-                    long id = (long) session.getAttribute("id");
-                    Usuario user = em.find(Usuario.class, id);
-
-                    user.setName(nombre);
-                    user.setEmail(email);
-                    try {
-
-                        utx.begin();
-                        em.merge(user);
-                        utx.commit();
-
-                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-                        Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
-                        try {
-                            utx.rollback();
-                        } catch (IllegalStateException | SecurityException | SystemException ex1) {
-                            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
-                        }
-                    }
-
-                    session.setAttribute("msg", "Usuario actualizado con exito");
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil");
-
-                } else if (info.equals("/productos/delete")) {
-
-                    long idProd = Long.parseLong(request.getParameter("idProd"));
-                    Producto prod = em.find(Producto.class, idProd);
-                    
-                    session = request.getSession();
-                    Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));                    
-                    System.out.println("ProdID  " + prod.getId());
+                    String pw = request.getParameter("password");
 
                     try {
-                        utx.begin();
-                        if (!em.contains(prod)) {
-                            prod = em.merge(prod);
+                        if (email.isEmpty() || pw.isEmpty()) {
+                            throw new NullPointerException();
                         }
-                        
-                        TypedQuery<Comentario> query = em.createNamedQuery("Comentario.findAllByIdProd", Comentario.class);
-                        query.setParameter("idProd", prod);
-                        List<Comentario> listaCom = query.getResultList();
-                        for(Comentario com : listaCom){
-                            em.remove(com);
-                        }
-                        
-                        em.remove(prod);
-                        user.getProductos().remove(prod);
-                        em.merge(user);
-                        
-                        utx.commit();
 
-                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-                        Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
-                        try {
-                            utx.rollback();
-                        } catch (IllegalStateException | SecurityException | SystemException ex1) {
-                            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
+                        Usuario user = validarLogin(email, pw);
+
+                        if (user != null) {
+                            session = request.getSession();
+                            session.setAttribute("id", user.getId());
+
+                            response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+
+                        } else {
+                            request.setAttribute("msg", "Error: email o contraseña erroneos");
+                            vista = "login";
                         }
+
+                    } catch (IOException | NullPointerException e) {
+                        request.setAttribute("msg", "Error: " + e.getMessage());
+                        vista = "error";
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil/productos");
+                }
+            }
 
-                } else {
-                    vista = "error";
+            case "/register" -> {
+                if (info.equals("/save")) {
+                    String name = request.getParameter("name");
+                    String email = request.getParameter("email");
+                    String pw = request.getParameter("password");
+
+                    try {
+                        if (name.isEmpty() || email.isEmpty() || pw.isEmpty()) {
+                            throw new NullPointerException();
+                        }
+
+                        Usuario user = new Usuario(name, email, pw);
+                        if (save(user)) {
+                            response.sendRedirect("http://" + HOST + ":8080/PortalVentas/login");
+                        } else {
+                            request.setAttribute("msg", "Warning: Ya existe un usuario con ese email");
+                            vista = "register";
+                        }
+
+                    } catch (IOException | NullPointerException e) {
+                        request.setAttribute("msg", "Error: " + e.getMessage());
+                        vista = "error";
+                    }
                 }
             }
 
@@ -203,6 +176,57 @@ public class PrincipalController extends HttpServlet {
     @Override
     public String getServletInfo() {
         return "Short description";
+    }
+
+    private boolean save(Usuario user) {
+        boolean bool = false;
+
+        try {
+            utx.begin();
+
+            TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findByEmail", Usuario.class);
+            query.setParameter("email", user.getEmail());
+
+            if (query.getResultList().isEmpty()) {
+                em.persist(user);
+                log.log(Level.INFO, "New user saved");
+                utx.commit();
+                bool = true;
+
+            } else {
+                utx.rollback();
+                log.log(Level.INFO, "Un usuario se ha intentado registrar con un correo ya registrado");
+            }
+
+        } catch (HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException | IllegalStateException | SecurityException e) {
+            log.log(Level.SEVERE, "exception caught", e);
+            throw new RuntimeException(e);
+        }
+
+        return bool;
+    }
+
+    private Usuario validarLogin(String email, String pass) {
+        Usuario user = null;
+
+        try {
+            TypedQuery<Usuario> query = em.createNamedQuery("Usuario.findByEmailAndPassword", Usuario.class);
+            query.setParameter("email", email);
+            query.setParameter("password", pass);
+            List<Usuario> lista = query.getResultList();
+
+            if (!lista.isEmpty()) {
+                user = lista.get(0);
+            } else {
+                log.log(Level.INFO, "Un usuario ha hecho login erroneamente");
+            }
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "exception caught", e);
+            throw new RuntimeException(e);
+        }
+
+        return user;
     }
 
 }
