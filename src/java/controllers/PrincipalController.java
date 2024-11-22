@@ -21,6 +21,7 @@ import jakarta.transaction.UserTransaction;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import models.Comentario;
 import models.Producto;
 import models.Usuario;
 
@@ -35,7 +36,7 @@ public class PrincipalController extends HttpServlet {
 
     private final String HOST = "localhost";
     //private final String HOST = "192.168.1.161";
-    
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -44,7 +45,7 @@ public class PrincipalController extends HttpServlet {
         HttpSession session;
 
         switch (servlet) {
-            
+
             case "/inicio" -> {
                 String palabra = request.getParameter("query");
                 List<Producto> lista;
@@ -78,7 +79,7 @@ public class PrincipalController extends HttpServlet {
                     session.removeAttribute("msg");
                 }
 
-                if (info!=null && info.equals("/productos")) {
+                if (info != null && info.equals("/productos")) {
                     request.setAttribute("productos", user.getProductos());
 
                     vista = "misproductos";
@@ -110,7 +111,7 @@ public class PrincipalController extends HttpServlet {
         HttpSession session;
 
         switch (servlet) {
-            
+
             case "/perfil" -> {
                 if (info.equals("/save")) {
                     String nombre = request.getParameter("nombre");
@@ -144,6 +145,45 @@ public class PrincipalController extends HttpServlet {
                     session.setAttribute("msg", "Usuario actualizado con exito");
                     response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil");
 
+                } else if (info.equals("/productos/delete")) {
+
+                    long idProd = Long.parseLong(request.getParameter("idProd"));
+                    Producto prod = em.find(Producto.class, idProd);
+                    
+                    session = request.getSession();
+                    Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));                    
+                    System.out.println("ProdID  " + prod.getId());
+
+                    try {
+                        utx.begin();
+                        if (!em.contains(prod)) {
+                            prod = em.merge(prod);
+                        }
+                        
+                        TypedQuery<Comentario> query = em.createNamedQuery("Comentario.findAllByIdProd", Comentario.class);
+                        query.setParameter("idProd", prod);
+                        List<Comentario> listaCom = query.getResultList();
+                        for(Comentario com : listaCom){
+                            em.remove(com);
+                        }
+                        
+                        em.remove(prod);
+                        user.getProductos().remove(prod);
+                        em.merge(user);
+                        
+                        utx.commit();
+
+                    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+                        Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex);
+                        try {
+                            utx.rollback();
+                        } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                            Logger.getLogger(PrincipalController.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
+                    }
+
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil/productos");
+
                 } else {
                     vista = "error";
                 }
@@ -164,5 +204,5 @@ public class PrincipalController extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }
-    
+
 }

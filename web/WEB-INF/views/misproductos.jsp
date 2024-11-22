@@ -43,13 +43,13 @@
 
                                         <div class="d-flex justify-content-end gap-2">
 
-                                            <form action="/PortalVentas/modificarProducto" method="GET">
-                                                <input type="hidden" name="productoId" value="${producto.id}">
+                                            <form action="/PortalVentas/perfil/productos/modificar" method="GET">
+                                                <input type="hidden" name="idProd" value="${producto.id}">
                                                 <button type="submit" class="btn btn-warning">Modificar</button>
                                             </form>
 
-                                            <form action="/PortalVentas/eliminarProducto" method="POST">
-                                                <input type="hidden" name="productoId" value="${producto.id}">
+                                            <form action="/PortalVentas/perfil/productos/delete" method="POST">
+                                                <input type="hidden" name="idProd" value="${producto.id}">
                                                 <button type="submit" class="btn btn-danger" onclick="return confirmarEliminacion()">Eliminar</button>
                                             </form>
                                         </div>

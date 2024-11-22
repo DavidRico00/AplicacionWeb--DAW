@@ -15,6 +15,7 @@ import java.io.Serializable;
 @Table(name="comentarios")
 @NamedQueries({
     @NamedQuery(name="Comentario.findAll", query="SELECT c FROM Comentario c"),
+    @NamedQuery(name="Comentario.findAllByIdProd", query="SELECT c FROM Comentario c WHERE c.product = :idProd"),
 })
 public class Comentario implements Serializable {
 
