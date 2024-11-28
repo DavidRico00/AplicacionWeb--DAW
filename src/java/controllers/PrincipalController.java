@@ -18,6 +18,9 @@ import jakarta.transaction.NotSupportedException;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.UserTransaction;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -115,7 +118,8 @@ public class PrincipalController extends HttpServlet {
                             throw new NullPointerException();
                         }
 
-                        Usuario user = validarLogin(email, pw);
+                        String pwC = pwdMD5(pw);
+                        Usuario user = validarLogin(email, pwC);
 
                         if (user != null) {
                             session = request.getSession();
@@ -147,7 +151,9 @@ public class PrincipalController extends HttpServlet {
                             throw new NullPointerException();
                         }
 
-                        Usuario user = new Usuario(name, email, pw);
+                        String pwC = pwdMD5(pw);
+                        
+                        Usuario user = new Usuario(name, email, pwC);
                         if (save(user)) {
                             response.sendRedirect("http://" + HOST + ":8080/PortalVentas/login");
                         } else {
@@ -227,6 +233,22 @@ public class PrincipalController extends HttpServlet {
         }
 
         return user;
+    }
+    
+    public static String pwdMD5(String pwd) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] hashBytes = md.digest(pwd.getBytes());
+
+            Formatter formatter = new Formatter();
+            for (byte b : hashBytes) {
+                formatter.format("%02x", b);
+            }
+            return formatter.toString();
+        }catch(NoSuchAlgorithmException e){
+            throw new RuntimeException("Error al encriptar: "+e);
+        }
+
     }
 
 }

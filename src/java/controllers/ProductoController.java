@@ -46,35 +46,32 @@ public class ProductoController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String vista;
+        String vista = "";
         String servlet = request.getServletPath(), info = request.getPathInfo();
-        HttpSession session;
+        HttpSession session = request.getSession();
 
         switch (servlet) {
-            
+
             case "/producto" -> {
                 long id = Long.parseLong(request.getParameter("id"));
 
                 Producto prod = em.find(Producto.class, id);
-
-                session = request.getSession();
                 request.setAttribute("id", session.getAttribute("id"));
                 request.setAttribute("producto", prod);
 
                 vista = "verproducto";
             }
-            
-            case "/nuevoproducto" -> {
-                session = request.getSession();
-                if (session.getAttribute("id") != null) {
-                    request.setAttribute("id", session.getAttribute("id"));
-                    vista = "nuevoproducto";
 
-                } else {
-                    vista = "error";
+            case "/nuevoproducto" -> {
+                if (session.getAttribute("id") == null) {
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    break;
                 }
+
+                request.setAttribute("id", session.getAttribute("id"));
+                vista = "nuevoproducto";
             }
-                
+
             default -> {
                 vista = "error";
             }
@@ -91,11 +88,17 @@ public class ProductoController extends HttpServlet {
             throws ServletException, IOException {
         String vista = "";
         String servlet = request.getServletPath(), info = request.getPathInfo();
-        HttpSession session;
-        
+        HttpSession session = request.getSession();
+
         switch (servlet) {
-            
+
             case "/nuevoproducto" -> {
+
+                if (session.getAttribute("id") == null) {
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    return;
+                }
+
                 if (info.equals("/save")) {
                     String titulo = request.getParameter("titulo");
                     String descripcion = request.getParameter("descripcion");
@@ -105,8 +108,6 @@ public class ProductoController extends HttpServlet {
                     if (titulo.isEmpty() || descripcion.isEmpty() || imgPart == null) {
                         throw new NullPointerException();
                     }
-
-                    session = request.getSession();
 
                     Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
 
@@ -120,10 +121,10 @@ public class ProductoController extends HttpServlet {
                     try {
                         utx.begin();
                         em.persist(prod);
-                        
+
                         List<Producto> prods = user.getProductos();
                         prods.add(prod);
-                        
+
                         em.merge(user);
 
                         String relativePathFolder = "" + File.separator + "img" + File.separator + "productos";
@@ -156,12 +157,18 @@ public class ProductoController extends HttpServlet {
                     }
 
                     response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+
                 } else {
                     vista = "error";
                 }
             }
-            
+
             case "/producto" -> {
+                if (session.getAttribute("id") == null) {
+                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    return;
+                }
+
                 if (info.equals("/addcomment")) {
 
                     long idProd = Long.parseLong(request.getParameter("id"));
@@ -197,7 +204,7 @@ public class ProductoController extends HttpServlet {
                     vista = "error";
                 }
             }
-            
+
             default -> {
                 vista = "error";
             }
