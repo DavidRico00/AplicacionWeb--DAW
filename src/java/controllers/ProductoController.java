@@ -1,5 +1,6 @@
 package controllers;
 
+import Utilidad.Direccion;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -40,9 +41,6 @@ public class ProductoController extends HttpServlet {
     private UserTransaction utx;
     private static final Logger log = Logger.getLogger(controllers.PrincipalController.class.getName());
 
-    private final String HOST = "localhost";
-    //private final String HOST = "192.168.1.161";
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -64,7 +62,7 @@ public class ProductoController extends HttpServlet {
 
             case "/nuevoproducto" -> {
                 if (session.getAttribute("id") == null) {
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                     break;
                 }
 
@@ -95,7 +93,7 @@ public class ProductoController extends HttpServlet {
             case "/nuevoproducto" -> {
 
                 if (session.getAttribute("id") == null) {
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                     return;
                 }
 
@@ -156,7 +154,7 @@ public class ProductoController extends HttpServlet {
                         }
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
 
                 } else {
                     vista = "error";
@@ -165,7 +163,7 @@ public class ProductoController extends HttpServlet {
 
             case "/producto" -> {
                 if (session.getAttribute("id") == null) {
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                     return;
                 }
 
@@ -198,7 +196,7 @@ public class ProductoController extends HttpServlet {
                         }
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/producto?id=" + idProd);
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/producto?id=" + idProd);
 
                 } else {
                     vista = "error";

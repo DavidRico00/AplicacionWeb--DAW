@@ -38,7 +38,8 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <input type="hidden" name="idprod" value="${producto.id}">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 <a href="/PortalVentas/perfil/productos" class="btn btn-secondary ms-2">Cancelar</a>
             </form>
         </div>

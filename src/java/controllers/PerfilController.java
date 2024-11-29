@@ -1,5 +1,6 @@
 package controllers;
 
+import Utilidad.Direccion;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -41,9 +42,6 @@ public class PerfilController extends HttpServlet {
     private UserTransaction utx;
     private static final Logger log = Logger.getLogger(controllers.PrincipalController.class.getName());
 
-    private final String HOST = "localhost";
-    //private final String HOST = "192.168.1.161";
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,7 +55,7 @@ public class PerfilController extends HttpServlet {
                 session = request.getSession();
 
                 if (session.getAttribute("id") == null) {
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                     break;
                 }
 
@@ -80,7 +78,7 @@ public class PerfilController extends HttpServlet {
                     Producto prod = em.find(Producto.class, idProd);
 
                     if (!user.getProductos().contains(prod)) {
-                        response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                        response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                         break;
                     }
 
@@ -117,9 +115,8 @@ public class PerfilController extends HttpServlet {
             case "/perfil" -> {
 
                 session = request.getSession();
-
                 if (session.getAttribute("id") == null) {
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                     break;
                 }
 
@@ -131,7 +128,6 @@ public class PerfilController extends HttpServlet {
                         throw new NullPointerException();
                     }
 
-                    session = request.getSession();
                     long id = (long) session.getAttribute("id");
                     Usuario user = em.find(Usuario.class, id);
 
@@ -153,18 +149,17 @@ public class PerfilController extends HttpServlet {
                     }
 
                     session.setAttribute("msg", "Usuario actualizado con exito");
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/perfil");
 
                 } else if (info.equals("/productos/delete")) {
 
                     long idProd = Long.parseLong(request.getParameter("idProd"));
                     Producto prod = em.find(Producto.class, idProd);
 
-                    session = request.getSession();
                     Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
 
                     if (!user.getProductos().contains(prod)) {
-                        response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                        response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
                         break;
                     }
 
@@ -196,51 +191,43 @@ public class PerfilController extends HttpServlet {
                         }
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil/productos");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/perfil/productos");
 
                 } else if (info.equals("/productos/savemod")) {
                     String titulo = request.getParameter("titulo");
                     String descripcion = request.getParameter("descripcion");
                     Part imgPart = request.getPart("imagen");
-                    String rutaImg;
 
                     if (titulo.isEmpty() || descripcion.isEmpty()) {
                         throw new NullPointerException();
                     }
 
-                    session = request.getSession();
-
-                    Usuario user = em.find(Usuario.class, (long) session.getAttribute("id"));
-
-                    int numProds = user.getSizeOfProductos();
-                    numProds++;
-
-                    rutaImg = "img" + File.separator + "productos" + File.separator + user.getId() + "_" + numProds + ".jpg";
-
-                    Producto prod = new Producto(titulo, descripcion, rutaImg, user);
+                    Producto prod = em.find(Producto.class, Long.valueOf(request.getParameter("idprod")));
 
                     try {
-                        utx.begin();
-                        em.persist(prod);
+                        prod.setNombre(titulo);
+                        prod.setDescripcion(descripcion);
 
-                        List<Producto> prods = user.getProductos();
-                        prods.add(prod);
+                        if (imgPart != null) {
+                            String relativePathFolder = prod.getRutaImg();
+                            String absolutePathFolder = getServletContext().getRealPath(relativePathFolder);
+                            
+                            File f = new File(absolutePathFolder);
+                            OutputStream fos = new FileOutputStream(f);
+                            InputStream filecontent = imgPart.getInputStream();
+                            int read = 0;
+                            final byte[] bytes = new byte[1024];
+                            while ((read = filecontent.read(bytes)) != -1) {
+                                fos.write(bytes, 0, read);
+                            }
 
-                        em.merge(user);
-
-                        String relativePathFolder = "" + File.separator + "img" + File.separator + "productos";
-                        String absolutePathFolder = getServletContext().getRealPath(relativePathFolder);
-                        File f = new File(absolutePathFolder + File.separator + user.getId() + "_" + numProds + ".jpg");
-                        OutputStream fos = new FileOutputStream(f);
-                        InputStream filecontent = imgPart.getInputStream();
-                        int read = 0;
-                        final byte[] bytes = new byte[1024];
-                        while ((read = filecontent.read(bytes)) != -1) {
-                            fos.write(bytes, 0, read);
+                            fos.close();
+                            filecontent.close();
                         }
 
-                        fos.close();
-                        filecontent.close();
+                        utx.begin();
+                        
+                        em.merge(prod);
 
                         utx.commit();
 
@@ -257,7 +244,7 @@ public class PerfilController extends HttpServlet {
                         }
                     }
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/perfil/productos");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/perfil/productos");
 
                 } else {
                     vista = "error";

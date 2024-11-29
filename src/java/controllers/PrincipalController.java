@@ -1,5 +1,6 @@
 package controllers;
 
+import Utilidad.Direccion;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -36,9 +37,6 @@ public class PrincipalController extends HttpServlet {
     private UserTransaction utx;
     private static final Logger log = Logger.getLogger(controllers.PrincipalController.class.getName());
 
-    private final String HOST = "localhost";
-    //private final String HOST = "192.168.1.161";
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -54,7 +52,7 @@ public class PrincipalController extends HttpServlet {
                     session.removeAttribute("id");
                     session.invalidate();
 
-                    response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                    response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
 
                 } else {
                     vista = "login";
@@ -125,7 +123,7 @@ public class PrincipalController extends HttpServlet {
                             session = request.getSession();
                             session.setAttribute("id", user.getId());
 
-                            response.sendRedirect("http://" + HOST + ":8080/PortalVentas/inicio");
+                            response.sendRedirect(Direccion.getInstance().getRedirect() + "/inicio");
 
                         } else {
                             request.setAttribute("msg", "Error: email o contraseña erroneos");
@@ -155,7 +153,7 @@ public class PrincipalController extends HttpServlet {
                         
                         Usuario user = new Usuario(name, email, pwC);
                         if (save(user)) {
-                            response.sendRedirect("http://" + HOST + ":8080/PortalVentas/login");
+                            response.sendRedirect(Direccion.getInstance().getRedirect() + "/login");
                         } else {
                             request.setAttribute("msg", "Warning: Ya existe un usuario con ese email");
                             vista = "register";
